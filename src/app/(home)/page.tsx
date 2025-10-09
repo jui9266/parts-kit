@@ -1,8 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Send, Paperclip, X, Loader2, Copy, Check } from "lucide-react";
-import { convertToCode } from "@/_action/convertToCode";
+import { convertToCode } from "@/actions/convertToCode";
+import { dbConnectTest } from "@/actions/dbConnectTest";
+import { chatAction } from "@/actions/chat";
+import Header from "@/components/comon/Header";
+import MessagesContainer from "@/feature/chat/MessagesContainer";
 
 interface Message {
   role: "user" | "assistant";
@@ -17,48 +21,92 @@ export default function AIChatMain() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [chatHistory, setChatHistory] = useState<Message[]>([]);
 
-  const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
+  console.log(messages);
 
-    if (!message.trim() && !file) return;
+  // const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  //   e.preventDefault();
 
-    // 사용자 메시지 추가
-    const userMessage: Message = {
-      role: "user",
-      content: message,
-      image: previewUrl,
-    };
-    setMessages((prev) => [...prev, userMessage]);
+  //   if (!message.trim() && !file) return;
 
-    // 입력 초기화
+  //   // 사용자 메시지 추가
+  //   const userMessage: Message = {
+  //     role: "user",
+  //     content: message,
+  //     image: previewUrl,
+  //   };
+  //   setMessages((prev) => [...prev, userMessage]);
+
+  //   // 입력 초기화
+  //   setMessage("");
+  //   setFile(undefined);
+  //   setPreviewUrl("");
+  //   setIsLoading(true);
+
+  //   try {
+  //     const formData = new FormData();
+  //     if (file) {
+  //       formData.append("image", file);
+  //     }
+
+  //     const result = await convertToCode(formData);
+
+  //     // AI 응답 추가
+  //     const assistantMessage: Message = {
+  //       role: "assistant",
+  //       content: result.success
+  //         ? result.content || "코드를 생성했습니다."
+  //         : result.error || "오류가 발생했습니다.",
+  //     };
+  //     setMessages((prev) => [...prev, assistantMessage]);
+  //   } catch (error) {
+  //     const errorMessage: Message = {
+  //       role: "assistant",
+  //       content: "오류가 발생했습니다. 다시 시도해주세요.",
+  //     };
+  //     setMessages((prev) => [...prev, errorMessage]);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
+
+  const handleSubmit = async () => {
+    const userMessage = message.trim();
     setMessage("");
-    setFile(undefined);
-    setPreviewUrl("");
     setIsLoading(true);
 
+    // 사용자 메시지를 히스토리에 추가
+    const newHistory = [
+      ...chatHistory,
+      { role: "user" as const, content: userMessage },
+    ];
+    setChatHistory(newHistory);
+
+    await setMessages((prev) => [
+      ...prev,
+      { role: "user", content: userMessage },
+    ]);
+
     try {
-      const formData = new FormData();
-      if (file) {
-        formData.append("image", file);
+      // 대화 히스토리와 함께 API 호출
+      const result = await chatAction(userMessage, newHistory);
+
+      if (result.success && result.content) {
+        // AI 응답을 히스토리에 추가
+        setChatHistory([
+          ...newHistory,
+          { role: "assistant", content: result.content },
+        ]);
+        setMessages([
+          ...messages,
+          { role: "assistant", content: result.content },
+        ]);
+      } else {
+        console.error("Error:", result.error);
       }
-
-      const result = await convertToCode(formData);
-
-      // AI 응답 추가
-      const assistantMessage: Message = {
-        role: "assistant",
-        content: result.success
-          ? result.content || "코드를 생성했습니다."
-          : result.error || "오류가 발생했습니다.",
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
-      const errorMessage: Message = {
-        role: "assistant",
-        content: "오류가 발생했습니다. 다시 시도해주세요.",
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      console.error("Chat error:", error);
     } finally {
       setIsLoading(false);
     }
@@ -81,15 +129,6 @@ export default function AIChatMain() {
     setPreviewUrl("");
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      if (message.trim() || file) {
-        handleSubmit(e as unknown as React.MouseEvent<HTMLButtonElement>);
-      }
-    }
-  };
-
   const copyToClipboard = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -103,92 +142,18 @@ export default function AIChatMain() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 px-4 py-4 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-2xl font-bold text-slate-800">AI Chat</h1>
-          <p className="text-sm text-slate-600">
-            이미지를 React 컴포넌트로 변환
-          </p>
-        </div>
-      </div>
+      <Header
+        title="Parts Kit AI"
+        description="이미지를 React 컴포넌트로 변환"
+      />
 
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="max-w-4xl mx-auto space-y-6">
-          {messages.length === 0 ? (
-            <div className="text-center py-20">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-                <Paperclip size={32} className="text-blue-600" />
-              </div>
-              <h2 className="text-2xl font-semibold text-slate-800 mb-2">
-                시작하기
-              </h2>
-              <p className="text-slate-600">
-                UI 이미지를 업로드하면 React 컴포넌트로 변환해드립니다
-              </p>
-            </div>
-          ) : (
-            messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex ${
-                  msg.role === "user" ? "justify-end" : "justify-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[80%] ${
-                    msg.role === "user"
-                      ? "bg-blue-600 text-white"
-                      : "bg-white text-slate-800 border border-slate-200"
-                  } rounded-2xl p-4 shadow-sm`}
-                >
-                  {msg.image && (
-                    <img
-                      src={msg.image}
-                      alt="Uploaded"
-                      className="rounded-lg mb-3 max-h-64 object-contain"
-                    />
-                  )}
-                  {msg.content && (
-                    <div className="whitespace-pre-wrap break-words">
-                      {msg.content}
-                    </div>
-                  )}
-                  {msg.role === "assistant" && msg.content.includes("```") && (
-                    <button
-                      onClick={() => copyToClipboard(msg.content)}
-                      className="mt-2 flex items-center gap-1 text-sm text-slate-600 hover:text-slate-800"
-                    >
-                      {copied ? (
-                        <>
-                          <Check size={14} />
-                          <span>복사됨</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={14} />
-                          <span>코드 복사</span>
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
-
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-                <div className="flex items-center gap-2 text-slate-600">
-                  <Loader2 size={18} className="animate-spin" />
-                  <span>코드 생성 중...</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      <MessagesContainer
+        messages={[]}
+        isLoading={isLoading}
+        copied={copied}
+        copyToClipboard={copyToClipboard}
+      />
 
       {/* Input Container */}
       <div className="bg-white border-t border-slate-200 px-4 py-4 sticky bottom-0">
@@ -216,7 +181,6 @@ export default function AIChatMain() {
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                onKeyDown={handleKeyDown}
                 placeholder="메시지를 입력하세요... (선택사항)"
                 className="w-full min-h-[80px] p-3 bg-white border border-slate-200 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
               />

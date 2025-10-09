@@ -1,4 +1,4 @@
-import { useAsyncRouterInitialization } from "@/_hooks/useAsyncRouter";
+import { useAsyncRouterInitialization } from "@/hooks/useAsyncRouter";
 
 export default function GlobalInitialization() {
   /**

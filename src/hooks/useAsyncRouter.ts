@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { useAtomValue, useSetAtom } from "jotai";
-import { asyncRouterAtom } from "@/_atoms/asyncRouter.atom";
+import { asyncRouterAtom } from "@/atoms/asyncRouter.atom";
 
 function useAsyncRouterDef() {
   const [isPending, startTransition] = useTransition();

@@ -2,8 +2,8 @@ import "jotai-devtools/styles.css";
 import "@/app/globals.css";
 
 import { Suspense } from "react";
-import Providers from "@/_components/Providers";
-import Sidebar from "@/_components/Sidebar";
+import Providers from "@/components/Providers";
+import Sidebar from "@/components/Sidebar";
 
 export default function RootLayout({
   children,

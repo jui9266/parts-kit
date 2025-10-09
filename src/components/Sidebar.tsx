@@ -3,6 +3,7 @@
 import Link from "next/link";
 import React, { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { appRoutes } from "@/routes/appRoutes";
 
 const Sidebar = () => {
   const [isOpen, setIsOpen] = useState(true);
@@ -33,7 +34,7 @@ const Sidebar = () => {
             <ul className="space-y-4">
               <li>
                 <Link
-                  href="/"
+                  href={appRoutes.home}
                   className="block p-3 rounded-lg hover:bg-gray-800 transition-colors"
                 >
                   Home
@@ -41,7 +42,7 @@ const Sidebar = () => {
               </li>
               <li>
                 <Link
-                  href="/parts"
+                  href={appRoutes.parts}
                   className="block p-3 rounded-lg hover:bg-gray-800 transition-colors"
                 >
                   Parts

@@ -1,9 +1,10 @@
 "use client";
 
-import ContactCard from "@/_components/parts/ContactCard";
-import SocialPost from "@/_components/parts/SocialPost";
-import Button from "@/_components/parts/Button";
 import React from "react";
+
+import ContactCard from "@/components/parts/ContactCard";
+import SocialPost from "@/components/parts/SocialPost";
+import Button from "@/components/parts/Button";
 
 const PartsPage = () => {
   return (
