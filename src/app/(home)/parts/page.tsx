@@ -1,10 +1,10 @@
-"use client";
+'use client'
 
-import React from "react";
+import React from 'react'
 
-import ContactCard from "@/components/parts/ContactCard";
-import SocialPost from "@/components/parts/SocialPost";
-import Button from "@/components/parts/Button";
+import ContactCard from '@/components/parts/ContactCard'
+import SocialPost from '@/components/parts/SocialPost'
+import Button from '@/components/parts/Button'
 
 const PartsPage = () => {
   return (
@@ -24,7 +24,7 @@ const PartsPage = () => {
         />
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default PartsPage;
+export default PartsPage

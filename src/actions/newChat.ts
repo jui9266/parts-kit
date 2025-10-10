@@ -5,7 +5,6 @@ import Anthropic from '@anthropic-ai/sdk'
 import ChatMessage from '@/models/ChatMessage'
 import { Types } from 'mongoose'
 import ChatRoom from '@/models/ChatRoom'
-import { IChatMessageModel } from '@/models/ChatMessage'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -16,14 +15,7 @@ type Message = {
   content: string
 }
 
-type ChatActionProps = {
-  message: string
-  roomId: string
-  file?: File
-  history: IChatMessageModel[]
-}
-
-export async function chatAction({ message, roomId, file, history = [] }: ChatActionProps) {
+export async function newChatAction(message: string, file?: File) {
   try {
     await dbConnect()
 
@@ -34,8 +26,14 @@ export async function chatAction({ message, roomId, file, history = [] }: ChatAc
       }
     }
 
+    const room = await ChatRoom.create({
+      roomTitle: 'new chat',
+      userId: '68e71f7917389007a021f195',
+      createdAt: new Date(),
+    })
+
     ChatMessage.create({
-      roomId: roomId,
+      roomId: room._id,
       role: 'user',
       content: message,
     })
@@ -44,10 +42,6 @@ export async function chatAction({ message, roomId, file, history = [] }: ChatAc
       model: 'claude-sonnet-4-5-20250929',
       max_tokens: 100,
       messages: [
-        ...history.map(message => ({
-          role: message.role as 'user' | 'assistant',
-          content: message.content,
-        })),
         {
           role: 'user',
           content: message,
@@ -56,7 +50,7 @@ export async function chatAction({ message, roomId, file, history = [] }: ChatAc
     })
 
     ChatMessage.create({
-      roomId: roomId,
+      roomId: room._id,
       role: 'assistant',
       content: response.content[0].type === 'text' ? response.content[0].text : '',
     })

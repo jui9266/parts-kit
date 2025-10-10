@@ -12,10 +12,6 @@ const ChatRoomSchema = new Schema(
       type: String,
       required: true,
     },
-    createAt: {
-      type: String,
-      required: true,
-    },
     userId: {
       type: Types.ObjectId,
       required: true,

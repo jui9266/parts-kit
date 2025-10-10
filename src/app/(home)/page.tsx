@@ -1,13 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { Send, Paperclip, X, Loader2, Copy, Check } from 'lucide-react'
-import { convertToCode } from '@/actions/convertToCode'
+import { useEffect, useRef, useState } from 'react'
 import { dbConnectTest } from '@/actions/dbConnectTest'
-import { chatAction } from '@/actions/chat'
 import Header from '@/components/comon/Header'
 import MessagesContainer from '@/feature/chat/MessagesContainer'
 import ChattingInput from '@/feature/chat/ChattingInput'
+import { newChatAction } from '@/actions/newChat'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -18,11 +16,10 @@ interface Message {
 export default function AIChatMain() {
   const [message, setMessage] = useState('')
   const [file, setFile] = useState<File>()
-  const [previewUrl, setPreviewUrl] = useState<string>('')
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [copied, setCopied] = useState(false)
-  const [chatHistory, setChatHistory] = useState<Message[]>([])
+  const messagesEndRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const connect = async () => {
@@ -30,7 +27,7 @@ export default function AIChatMain() {
       console.log(result)
     }
     connect()
-  }, [])
+  }, [messages])
 
   // const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
   //   e.preventDefault();
@@ -83,51 +80,17 @@ export default function AIChatMain() {
     setMessage('')
     setIsLoading(true)
 
-    // 사용자 메시지를 히스토리에 추가
-    const newHistory = [...chatHistory, { role: 'user' as const, content: userMessage }]
-    setChatHistory(newHistory)
-
     await setMessages(prev => [...prev, { role: 'user', content: userMessage }])
 
     try {
       // 대화 히스토리와 함께 API 호출
-      const result = await chatAction(userMessage, newHistory)
-
-      // if (result.success && result.content) {
-      //   // AI 응답을 히스토리에 추가
-      //   setChatHistory([
-      //     ...newHistory,
-      //     { role: "assistant", content: result.content },
-      //   ]);
-      //   setMessages([
-      //     ...messages,
-      //     { role: "assistant", content: result.content },
-      //   ]);
-      // } else {
-      //   console.error("Error:", result.error);
-      // }
+      const result = await newChatAction(userMessage, file)
+      await setMessages(prev => [...prev, { role: 'assistant', content: result.content || '' }])
     } catch (error) {
       console.error('Chat error:', error)
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0]
-    if (selectedFile) {
-      setFile(selectedFile)
-      const url = URL.createObjectURL(selectedFile)
-      setPreviewUrl(url)
-    }
-  }
-
-  const removeFile = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl)
-    }
-    setFile(undefined)
-    setPreviewUrl('')
   }
 
   const copyToClipboard = async (text: string) => {
@@ -144,12 +107,22 @@ export default function AIChatMain() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
       {/* Header */}
       <Header title="Parts Kit AI" description="이미지를 React 컴포넌트로 변환" />
-
       {/* Messages Container */}
-      <MessagesContainer messages={[]} isLoading={isLoading} copied={copied} copyToClipboard={copyToClipboard} />
-
+      <MessagesContainer
+        messages={[]}
+        isLoading={isLoading}
+        copied={copied}
+        copyToClipboard={copyToClipboard}
+        messagesEndRef={messagesEndRef}
+      />
       {/* Input Container */}
-      <ChattingInput />
+      <ChattingInput
+        handleSubmit={handleSubmit}
+        file={file}
+        setFile={setFile}
+        message={message}
+        setMessage={setMessage}
+      />{' '}
     </div>
   )
 }
