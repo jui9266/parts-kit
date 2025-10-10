@@ -3,7 +3,7 @@ import "@/app/globals.css";
 
 import { Suspense } from "react";
 import Providers from "@/components/Providers";
-import Sidebar from "@/components/Sidebar";
+import Sidebar from "@/components/comon/Sidebar";
 
 export default function RootLayout({
   children,

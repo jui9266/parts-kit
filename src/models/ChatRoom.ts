@@ -1,18 +1,13 @@
-import { model, models, Schema, Document, Types } from "mongoose";
+import { model, models, Schema, Document, Types } from 'mongoose'
 
 export interface IChatRoom extends Document {
-  roomId: Types.ObjectId;
-  roomTitle: string;
-  createAt: Date;
-  userId: Types.ObjectId;
+  roomTitle: string
+  createdAt: Date
+  userId: Types.ObjectId
 }
 
 const ChatRoomSchema = new Schema(
   {
-    roomId: {
-      type: Types.ObjectId,
-      required: true,
-    },
     roomTitle: {
       type: String,
       required: true,
@@ -27,35 +22,34 @@ const ChatRoomSchema = new Schema(
     },
   },
   {
-    collection: "chatRooms",
+    collection: 'chat_rooms',
     id: true,
     versionKey: false,
-    timestamps: { createdAt: "createdAt", updatedAt: "updatedAt" },
+    timestamps: { createdAt: 'createdAt', updatedAt: 'updatedAt' },
     toJSON: {
       virtuals: true,
       getters: true,
       transform: (_, ret: Record<string, unknown>) => {
         // ObjectId를 string으로 변환
         if (ret._id) {
-          ret.id = ret._id.toString();
-          delete ret._id;
+          ret.id = ret._id.toString()
+          delete ret._id
         }
         // 다른 ObjectId 필드들도 변환 (필요시)
         if (ret.createdAt) {
-          ret.createdAt = ret.createdAt.toString();
+          ret.createdAt = ret.createdAt.toString()
         }
         if (ret.updatedAt) {
-          ret.updatedAt = ret.updatedAt.toString();
+          ret.updatedAt = ret.updatedAt.toString()
         }
-        return ret;
+        return ret
       },
     },
-  }
-);
+  },
+)
 
-ChatRoomSchema.index({ createdAt: 1 });
+ChatRoomSchema.index({ createdAt: 1 })
 
-const ChatRoom =
-  models.ChatRoom || model<IChatRoom>("ChatRoom", ChatRoomSchema);
+const ChatRoom = models.ChatRoom || model<IChatRoom>('ChatRoom', ChatRoomSchema)
 
-export default ChatRoom;
+export default ChatRoom

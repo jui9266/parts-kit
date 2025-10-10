@@ -1,35 +1,25 @@
-"use server";
+'use server'
 
-import dbConnect from "@/lib/mongodbConnect";
-import User from "@/models/User";
+import dbConnect from '@/lib/mongodbConnect'
+import User from '@/models/User'
 
 export async function dbConnectTest() {
   try {
-    await dbConnect();
+    await dbConnect()
 
-    const users = await User.find().limit(3).lean();
-
-    // Convert MongoDB ObjectIds to strings for client serialization
-    const plainUsers = users.map((user) => ({
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      // Don't send password to client!
-      // password: user.password,
-    }));
-
-    console.log("Users", plainUsers);
+    const users = await User.find().limit(3)
+    const serializedUsers = users.map(user => user.toJSON())
 
     return {
       success: true,
-      users: plainUsers,
-    };
+      users: serializedUsers,
+    }
   } catch (error) {
-    console.error(error);
+    console.error(error)
 
     return {
       success: false,
-      error: "Failed to connect to database",
-    };
+      error: 'Failed to connect to database',
+    }
   }
 }

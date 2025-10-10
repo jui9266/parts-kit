@@ -1,10 +1,12 @@
+import { UserRole } from "@/types/enums/user.enum";
 import { model, models, Schema, Document } from "mongoose";
 
 export interface IUser extends Document {
   name: string;
+  role: UserRole;
   email: string;
-  password: string;
   createdAt: Date;
+  updatedAt: Date;  
 }
 
 export interface IUserModel extends IUser, Document {
@@ -17,14 +19,14 @@ const UserSchema = new Schema(
       type: String,
       required: true,
     },
+    role: {
+      type: String,
+      required: true,
+    },
     email: {
       type: String,
       required: true,
-    },
-    password: {
-      type: String,
-      required: true,
-    },
+    }
   },
   {
     collection: "users",

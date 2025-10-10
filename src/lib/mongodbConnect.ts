@@ -1,8 +1,8 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose'
 
 interface MongooseCache {
-  conn: typeof mongoose | null;
-  promise: Promise<typeof mongoose> | null;
+  conn: typeof mongoose | null
+  promise: Promise<typeof mongoose> | null
 }
 
 // 전역 캐싱 (싱글톤 패턴)
@@ -15,26 +15,24 @@ interface MongooseCache {
 
 /* eslint-disable no-var */
 declare global {
-  var mongoose: MongooseCache | undefined;
+  var mongoose: MongooseCache | undefined
 }
 
-const cached: MongooseCache = global.mongoose || { conn: null, promise: null };
+const cached: MongooseCache = globalThis.mongoose || { conn: null, promise: null }
 
-if (!global.mongoose) {
-  global.mongoose = cached;
+if (!globalThis.mongoose) {
+  globalThis.mongoose = cached
 }
 
 async function dbConnect() {
-  const MONGODB_URI = process.env.MONGODB_URI;
+  const MONGODB_URI = process.env.MONGODB_URI
 
   if (!MONGODB_URI) {
-    throw new Error(
-      "Please define the MONGODB_URI environment variable inside .env.local"
-    );
+    throw new Error('Please define the MONGODB_URI environment variable inside .env.local')
   }
 
   if (cached.conn) {
-    return cached.conn;
+    return cached.conn
   }
 
   // Promise 캐싱
@@ -44,15 +42,15 @@ async function dbConnect() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
-    };
+    }
 
     // 이 Promise를 cached.promise에 저장합니다.
 
     // MongoDB의 mongoose.connect() 함수
     // 내부적으로 연결 상태를 관리하고 있어서, 이미 연결되어 있는 경우에는 새로운 연결을 만들지 않고 기존 연결을 재사용.
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      return mongoose;
-    });
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then(mongoose => {
+      return mongoose
+    })
   }
 
   // 일반적인 경우에는 추가 옵션 없이도 Mongoose의 기본 설정이 대부분의 애플리케이션에 충분합니다. 하지만 애플리케이션의 요구사항에 따라 연결 풀 설정을 조정하는 것이 유용할 수 있습니다.
@@ -76,11 +74,11 @@ async function dbConnect() {
 
   try {
     // await cached.promise로 연결이 완료될 때까지 기다립니다.
-    cached.conn = await cached.promise;
+    cached.conn = await cached.promise
   } catch (e) {
     // 연결 실패 시 promise 상태를 초기화하여 다음 시도가 가능하게 합니다.
-    cached.promise = null;
-    throw e;
+    cached.promise = null
+    throw e
   }
 
   // 만약 여러 요청이 동시에 들어온다면:
@@ -89,7 +87,7 @@ async function dbConnect() {
   // 모든 요청은 같은 Promise를 공유하므로, 실제로는 단 하나의 DB 연결만 시도됩니다.
   // 이런 방식으로 동시에 여러 요청이 들어와도 MongoDB에 대한 연결 시도는 한 번만 발생하게 됩니다.
 
-  return cached.conn;
+  return cached.conn
 }
 
-export default dbConnect;
+export default dbConnect
