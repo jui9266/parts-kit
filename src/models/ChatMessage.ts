@@ -3,6 +3,7 @@ import { model, models, Schema, Document, Types } from 'mongoose'
 export interface IChatMessage extends Document {
   roomId: Types.ObjectId
   role: string
+  type: 'text' | 'image'
   content: string
   createdAt: Date
 }
@@ -17,6 +18,10 @@ const ChatMessageSchema = new Schema(
       type: Schema.Types.ObjectId,
       required: true,
       ref: 'ChatRoom',
+    },
+    type: {
+      type: String,
+      required: true,
     },
     role: {
       type: String,

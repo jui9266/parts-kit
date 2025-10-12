@@ -3,28 +3,33 @@
 import dbConnect from '@/lib/mongodbConnect'
 import Anthropic from '@anthropic-ai/sdk'
 import ChatMessage from '@/models/ChatMessage'
-import { Types } from 'mongoose'
 import ChatRoom from '@/models/ChatRoom'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 })
 
-type Message = {
-  role: 'user' | 'assistant'
-  content: string
-}
-
-export async function newChatAction(message: string, file?: File) {
+export async function newChatAction(message: string, formData: FormData) {
   try {
     await dbConnect()
 
-    if (!message) {
+    const image = formData.get('image') as File
+    const imageUrl = formData.get('imageUrl') as string
+
+    if (!image) {
       return {
         success: false,
-        error: '메시지가 없습니다.',
+        error: '이미지가 없습니다.',
       }
     }
+
+    // File을 Base64로 변환
+    const bytes = await image.arrayBuffer()
+    const buffer = Buffer.from(bytes)
+    const base64Image = buffer.toString('base64')
+
+    // 이미지 타입 감지
+    const imageType = image.type.split('/')[1] as 'jpeg' | 'png' | 'gif' | 'webp'
 
     const room = await ChatRoom.create({
       roomTitle: 'new chat',
@@ -32,19 +37,59 @@ export async function newChatAction(message: string, file?: File) {
       createdAt: new Date(),
     })
 
-    ChatMessage.create({
-      roomId: room._id,
-      role: 'user',
-      content: message,
-    })
+    if (imageUrl) {
+      ChatMessage.create({
+        roomId: room._id,
+        role: 'user',
+        content: imageUrl,
+        type: 'image',
+      })
+    }
+
+    if (message) {
+      ChatMessage.create({
+        roomId: room._id,
+        role: 'user',
+        content: message,
+        type: 'text',
+      })
+    }
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 100,
+      max_tokens: 2000,
       messages: [
         {
           role: 'user',
-          content: message,
+          content: [
+            {
+              type: 'image',
+              source: {
+                type: 'base64',
+                media_type: `image/${imageType}`,
+                data: base64Image,
+              },
+            },
+            {
+              type: 'text',
+              text: `이 UI를 React + Tailwind CSS를 사용해서 컴포넌트로 만들어줘. 
+              
+요구사항:
+- TypeScript를 사용할 것
+- Tailwind CSS 유틸리티 클래스만 사용할 것
+- material-ui가 사용하는 형식의 props를 사용할것
+- 반응형 디자인을 고려할 것
+- 접근성을 고려할 것
+- 완전히 작동하는 코드를 제공할 것
+- 컴포넌트 이름은 카멜 케이스로 할 것
+- Next.js 15 버전을 사용할 것
+- Image 컴포넌트는 next/image를 사용할 것
+
+코드만 반환해줘.
+
+${message}`,
+            },
+          ],
         },
       ],
     })
@@ -53,13 +98,12 @@ export async function newChatAction(message: string, file?: File) {
       roomId: room._id,
       role: 'assistant',
       content: response.content[0].type === 'text' ? response.content[0].text : '',
+      type: 'text',
     })
-
-    // console.log(JSON.stringify(response.content[0], null, 2));
 
     return {
       success: true,
-      content: response.content[0].type === 'text' ? response.content[0].text : '',
+      roomId: room._id.toString(),
     }
   } catch (error) {
     console.error('Claude API Error:', error)

@@ -2,10 +2,11 @@ import { Paperclip, Check, Copy, Loader2 } from 'lucide-react'
 import React from 'react'
 
 type MessagesContainerProps = {
+  isNewChat?: boolean
   messages: {
     role: string
     content: string
-    image?: string
+    type: 'text' | 'image'
   }[]
   isLoading: boolean
   copied: boolean
@@ -14,6 +15,7 @@ type MessagesContainerProps = {
 }
 
 const MessagesContainer = ({
+  isNewChat,
   messages,
   isLoading,
   copied,
@@ -23,7 +25,7 @@ const MessagesContainer = ({
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
       <div className="max-w-4xl mx-auto space-y-6">
-        {messages.length === 0 ? (
+        {isNewChat && messages.length === 0 ? (
           <div className="text-center py-20">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
               <Paperclip size={32} className="text-blue-600" />
@@ -39,10 +41,10 @@ const MessagesContainer = ({
                   msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white text-slate-800 border border-slate-200'
                 } rounded-2xl p-4 shadow-sm`}
               >
-                {msg.image && (
-                  <img src={msg.image} alt="Uploaded" className="rounded-lg mb-3 max-h-64 object-contain" />
+                {msg.type === 'image' && (
+                  <img src={msg.content} alt="Uploaded" className="rounded-lg mb-3 max-h-64 object-contain" />
                 )}
-                {msg.content && <div className="whitespace-pre-wrap break-words">{msg.content}</div>}
+                {msg.type === 'text' && <div className="whitespace-pre-wrap break-words">{msg.content}</div>}
                 {msg.role === 'assistant' && msg.content.includes('```') && (
                   <button
                     onClick={() => copyToClipboard(msg.content)}

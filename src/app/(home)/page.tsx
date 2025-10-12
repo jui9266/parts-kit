@@ -2,15 +2,16 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { dbConnectTest } from '@/actions/dbConnectTest'
-import Header from '@/components/comon/Header'
 import MessagesContainer from '@/feature/chat/MessagesContainer'
 import ChattingInput from '@/feature/chat/ChattingInput'
 import { newChatAction } from '@/actions/newChat'
+import { useRouter } from 'next/navigation'
+import { getPresignedPutUrl } from '@/lib/s3'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
-  image?: string
+  type: 'text' | 'image'
 }
 
 export default function AIChatMain() {
@@ -20,72 +21,59 @@ export default function AIChatMain() {
   const [isLoading, setIsLoading] = useState(false)
   const [copied, setCopied] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    const connect = async () => {
-      const result = await dbConnectTest()
-      console.log(result)
-    }
-    connect()
-  }, [messages])
-
-  // const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
-  //   e.preventDefault();
-
-  //   if (!message.trim() && !file) return;
-
-  //   // 사용자 메시지 추가
-  //   const userMessage: Message = {
-  //     role: "user",
-  //     content: message,
-  //     image: previewUrl,
-  //   };
-  //   setMessages((prev) => [...prev, userMessage]);
-
-  //   // 입력 초기화
-  //   setMessage("");
-  //   setFile(undefined);
-  //   setPreviewUrl("");
-  //   setIsLoading(true);
-
-  //   try {
-  //     const formData = new FormData();
-  //     if (file) {
-  //       formData.append("image", file);
-  //     }
-
-  //     const result = await convertToCode(formData);
-
-  //     // AI 응답 추가
-  //     const assistantMessage: Message = {
-  //       role: "assistant",
-  //       content: result.success
-  //         ? result.content || "코드를 생성했습니다."
-  //         : result.error || "오류가 발생했습니다.",
-  //     };
-  //     setMessages((prev) => [...prev, assistantMessage]);
-  //   } catch (error) {
-  //     const errorMessage: Message = {
-  //       role: "assistant",
-  //       content: "오류가 발생했습니다. 다시 시도해주세요.",
-  //     };
-  //     setMessages((prev) => [...prev, errorMessage]);
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
+  const router = useRouter()
 
   const handleSubmit = async () => {
+    if (!file) {
+      return alert('변환하고자 하는 이미지를 추가해주세요.')
+    }
     const userMessage = message.trim()
     setMessage('')
     setIsLoading(true)
 
-    await setMessages(prev => [...prev, { role: 'user', content: userMessage }])
-
     try {
+      const formData = new FormData()
+      if (file) {
+        formData.append('image', file)
+        const presignedUrl = await getPresignedPutUrl('parts-kit', 'part-thumbnail/test.jpg', file.type, 600)
+
+        await fetch(presignedUrl, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': file.type,
+          },
+          body: file,
+        })
+        const imageUrl = presignedUrl.split('?')[0]
+        formData.append('imageUrl', imageUrl)
+      }
+
+      const newMessages: Message[] = []
+      const imageUrl = formData.get('imageUrl') as string
+
+      if (imageUrl) {
+        newMessages.push({
+          role: 'user',
+          content: imageUrl,
+          type: 'image',
+        })
+      }
+
+      if (userMessage) {
+        newMessages.push({
+          role: 'user',
+          content: userMessage,
+          type: 'text',
+        })
+      }
+
+      setMessages(newMessages)
+
       // 대화 히스토리와 함께 API 호출
-      const result = await newChatAction(userMessage, file)
-      await setMessages(prev => [...prev, { role: 'assistant', content: result.content || '' }])
+      const result = await newChatAction(userMessage, formData)
+      if (result.success) {
+        router.push(`/chat/${result.roomId}`)
+      }
     } catch (error) {
       console.error('Chat error:', error)
     } finally {
@@ -105,24 +93,21 @@ export default function AIChatMain() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
-      {/* Header */}
-      <Header title="Parts Kit AI" description="이미지를 React 컴포넌트로 변환" />
-      {/* Messages Container */}
       <MessagesContainer
-        messages={[]}
+        isNewChat={true}
+        messages={messages}
         isLoading={isLoading}
         copied={copied}
         copyToClipboard={copyToClipboard}
         messagesEndRef={messagesEndRef}
       />
-      {/* Input Container */}
       <ChattingInput
         handleSubmit={handleSubmit}
         file={file}
         setFile={setFile}
         message={message}
         setMessage={setMessage}
-      />{' '}
+      />
     </div>
   )
 }

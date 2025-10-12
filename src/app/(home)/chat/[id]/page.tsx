@@ -13,6 +13,7 @@ const ChatPage = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [file, setFile] = useState<File | undefined>(undefined)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
+  const [copied, setCopied] = useState(false)
 
   const scrollToBottom = () => {
     console.log('scrollToBottom')
@@ -38,7 +39,7 @@ const ChatPage = () => {
     setMessage('')
     setIsLoading(true)
 
-    await setMessages(prev => [...prev, { role: 'user', content: userMessage } as IChatMessageModel])
+    await setMessages(prev => [...prev, { role: 'user', content: userMessage, type: 'text' } as IChatMessageModel])
 
     try {
       // 대화 히스토리와 함께 API 호출
@@ -49,11 +50,24 @@ const ChatPage = () => {
         history: messages as IChatMessageModel[],
       })
 
-      await setMessages(prev => [...prev, { role: 'assistant', content: result.content || '' } as IChatMessageModel])
+      await setMessages(prev => [
+        ...prev,
+        { role: 'assistant', content: result.content || '', type: 'text' } as IChatMessageModel,
+      ])
     } catch (error) {
       console.error('Chat error:', error)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch (err) {
+      console.error('복사 실패:', err)
     }
   }
 
@@ -63,8 +77,8 @@ const ChatPage = () => {
       <MessagesContainer
         messages={messages}
         isLoading={isLoading}
-        copied={false}
-        copyToClipboard={() => {}}
+        copied={copied}
+        copyToClipboard={copyToClipboard}
         messagesEndRef={messagesEndRef}
       />
       <ChattingInput

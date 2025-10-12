@@ -42,7 +42,7 @@ export async function chatAction({ message, roomId, file, history = [] }: ChatAc
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-5-20250929',
-      max_tokens: 100,
+      max_tokens: 2000,
       messages: [
         ...history.map(message => ({
           role: message.role as 'user' | 'assistant',
