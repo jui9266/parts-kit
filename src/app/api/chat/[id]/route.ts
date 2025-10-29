@@ -1,12 +1,15 @@
 // app/api/chat/[id]/route.ts
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import ChatMessage from '@/models/ChatMessage'
 import { Types } from 'mongoose'
 import dbConnect from '@/lib/mongodbConnect'
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   await dbConnect()
-  const messages = await ChatMessage.find({ roomId: new Types.ObjectId(params.id) })
+
+  const { id } = await params
+
+  const messages = await ChatMessage.find({ roomId: new Types.ObjectId(id) })
     .sort({ createdAt: 1 })
     .lean()
 
