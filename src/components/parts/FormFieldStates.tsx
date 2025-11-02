@@ -91,7 +91,7 @@ const FormFieldDemo: React.FC = () => {
   const [isDisabled, setIsDisabled] = React.useState(false)
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
+    <div className="bg-gray-100 py-8 px-4">
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Form Field */}
         <div className="bg-white rounded-lg shadow-sm p-6">

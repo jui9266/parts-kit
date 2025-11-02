@@ -84,10 +84,12 @@ export async function newChatAction(message: string, formData: FormData) {
 - 컴포넌트 이름은 카멜 케이스로 할 것
 - Next.js 15 버전을 사용할 것
 - Image 컴포넌트는 next/image를 사용할 것
+- svg 테그 대신 feature-icon 을 사용할 것
+
+추가요구사항 : ${message}
 
 코드만 반환해줘.
-
-${message}`,
+`,
             },
           ],
         },

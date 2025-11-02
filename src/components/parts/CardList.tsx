@@ -1,7 +1,7 @@
 //해당 컴포넌트는 AI를 이용하여 만든 테스트 컴포넌트입니다.
 import React from 'react'
-import S3Image from '@/components/common/S3Image'
-
+import Image from 'next/image'
+import DefaultImage from '@/assets/images/part-default-image.jpg'
 interface CardListItemProps {
   image: string
   imageAlt: string
@@ -43,8 +43,8 @@ const CardListItem: React.FC<CardListItemProps> = ({
       aria-label={`${title} 카드`}
     >
       <div className="flex-shrink-0 w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-28 relative border border-gray-300 rounded-md overflow-hidden bg-gray-50">
-        <S3Image
-          src={image}
+        <Image
+          src={DefaultImage}
           alt={imageAlt}
           fill
           className="object-cover"
