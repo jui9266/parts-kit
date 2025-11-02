@@ -61,26 +61,10 @@ const ChatPage = () => {
     }
   }
 
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch (err) {
-      console.error('복사 실패:', err)
-    }
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
       {/* <Header title="Parts Kit AI" description="이미지를 React 컴포넌트로 변환" /> */}
-      <MessagesContainer
-        messages={messages}
-        isLoading={isLoading}
-        copied={copied}
-        copyToClipboard={copyToClipboard}
-        messagesEndRef={messagesEndRef}
-      />
+      <MessagesContainer messages={messages} isLoading={isLoading} messagesEndRef={messagesEndRef} />
       <ChattingInput
         handleSubmit={handleSubmit}
         file={undefined}

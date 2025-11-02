@@ -19,7 +19,6 @@ export default function AIChatMain() {
   const [file, setFile] = useState<File>()
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [copied, setCopied] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement | null>(null)
   const router = useRouter()
 
@@ -81,26 +80,9 @@ export default function AIChatMain() {
     }
   }
 
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch (err) {
-      console.error('복사 실패:', err)
-    }
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
-      <MessagesContainer
-        isNewChat={true}
-        messages={messages}
-        isLoading={isLoading}
-        copied={copied}
-        copyToClipboard={copyToClipboard}
-        messagesEndRef={messagesEndRef}
-      />
+      <MessagesContainer isNewChat={true} messages={messages} isLoading={isLoading} messagesEndRef={messagesEndRef} />
       <ChattingInput
         handleSubmit={handleSubmit}
         file={file}
