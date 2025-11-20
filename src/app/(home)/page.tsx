@@ -1,12 +1,12 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { dbConnectTest } from '@/actions/dbConnectTest'
+import { useRef, useState } from 'react'
 import MessagesContainer from '@/feature/chat/MessagesContainer'
 import ChattingInput from '@/feature/chat/ChattingInput'
 import { newChatAction } from '@/actions/newChat'
 import { useRouter } from 'next/navigation'
 import { getPresignedPutUrl } from '@/lib/s3'
+import { v4 as uuidv4 } from 'uuid'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -34,7 +34,12 @@ export default function AIChatMain() {
       const formData = new FormData()
       if (file) {
         formData.append('image', file)
-        const presignedUrl = await getPresignedPutUrl('parts-kit', 'part-thumbnail/test.jpg', file.type, 600)
+        const presignedUrl = await getPresignedPutUrl(
+          'parts-kit',
+          `part-thumbnail/${uuidv4()}.${file.type.split('/')[1]}`,
+          file.type,
+          600,
+        )
 
         await fetch(presignedUrl, {
           method: 'PUT',

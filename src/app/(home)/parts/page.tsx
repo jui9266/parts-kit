@@ -8,6 +8,7 @@ import Button from '@/components/parts/Button'
 import CardList from '@/components/parts/CardList'
 import FormFieldStates from '@/components/parts/FormFieldStates'
 import Modal from '@/components/parts/Modal'
+import Slider from '@/components/parts/Slider'
 
 const PartsPage = () => {
   const [openModal, setOpenModal] = useState(false)
@@ -56,6 +57,7 @@ const PartsPage = () => {
         createButtonText="createButtonText"
         cancelButtonText="cancelButtonText"
       />
+      <Slider onChange={value => console.log(value)} />
     </div>
   )
 }
