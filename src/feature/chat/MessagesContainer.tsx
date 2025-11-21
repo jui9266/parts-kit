@@ -24,7 +24,7 @@ const MessagesContainer = ({ isNewChat, messages, isLoading, messagesEndRef }: M
           messages.map((msg, index) => (
             <div key={index} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-[80%] ${
+                className={`max-w-[85%] ${
                   msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-white text-slate-800 border border-slate-200'
                 } rounded-2xl p-4`}
               >

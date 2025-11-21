@@ -1,9 +1,8 @@
+import PreviewSandBox from '@/components/PreviewSandBox'
 import { Check, Copy } from 'lucide-react'
 import React, { useState } from 'react'
-import SyntaxHighlighter from 'react-syntax-highlighter'
-import { atomOneDark } from 'react-syntax-highlighter/dist/esm/styles/hljs'
 
-const CodeViewr = ({ value }: { value: string }) => {
+const CodeViewr = ({ value, dependencies }: { value: string; dependencies?: Record<string, string> }) => {
   const [copied, setCopied] = useState(false)
 
   const copyToClipboard = async (text: string) => {
@@ -18,19 +17,7 @@ const CodeViewr = ({ value }: { value: string }) => {
 
   return (
     <div className="my-2">
-      <SyntaxHighlighter
-        language={'typescript'}
-        style={atomOneDark}
-        customStyle={{
-          borderRadius: '8px',
-          fontSize: '16px',
-          padding: '10px',
-          margin: 0,
-        }}
-        wrapLongLines
-      >
-        {value}
-      </SyntaxHighlighter>
+      <PreviewSandBox code={value} dependencies={dependencies} />
 
       <button
         onClick={() => copyToClipboard(value)}
